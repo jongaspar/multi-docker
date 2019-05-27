@@ -1,0 +1,22 @@
+sudo: required
+services:
+  - docker
+
+before_install:
+  - docker build -t jongaspar/react-test -f ./clienet/Dockerfile.dev ./client
+
+script:
+  - docker run jongaspar/react-test npm test -- --coverage
+
+after_success:
+  - docker build -t jongaspar/multi-client ./client
+  - docker build -t jongaspar/multi-nginx ./nginx
+  - docker build -t jongaspar/multi-server ./server
+  - docker build -t jongaspar/multi-worker ./worker
+  # Log in to docker CLI
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+  # Take these images and push them to docker hub
+  - docker push jongaspar/multi-client
+  - docker push jongaspar/multi-nginx
+  - docker push jongaspar/multi-server
+  - docker push jongaspar/multi-worker
